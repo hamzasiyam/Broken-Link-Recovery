@@ -2,10 +2,7 @@
 
 ## Project Description
 
-
-
 ## Features
-
 
 ## Getting Started
 
