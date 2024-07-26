@@ -1,10 +1,12 @@
+import os
 import subprocess
 import pandas as pd
 from datetime import datetime
 from docx import Document
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
-from docx.shared import Pt
+from docx.shared import Pt, Inches, RGBColor
+from tkinter import Tk, filedialog, messagebox, Label, Entry, Button, StringVar
 
 def get_snapshots(url):
     result = subprocess.run(['waybackpack', url, '--list'], capture_output=True, text=True)
@@ -24,7 +26,7 @@ def extract_date_from_link(link):
 def split_date_components(date):
     return date.strftime('%B'), date.strftime('%d'), date.strftime('%Y'), date.strftime('%I'), date.strftime('%M'), date.strftime('%S'), date.strftime('%p')
 
-def create_summary_report(snapshots, domain, filename='summary_report.docx'):
+def create_summary_report(snapshots, domain, logo_path, logo_height_percent, filename='summary_report.docx'):
     data = [(snap, *split_date_components(extract_date_from_link(snap))) for snap in snapshots]
     df = pd.DataFrame(data, columns=['Link', 'Month', 'Day', 'Year', 'Hour', 'Minute', 'Second', 'AM/PM'])
 
@@ -45,6 +47,16 @@ def create_summary_report(snapshots, domain, filename='summary_report.docx'):
     }
 
     doc = Document()
+    
+    # Add the logo above the title
+    if logo_path:
+        from PIL import Image
+        logo = Image.open(logo_path)
+        logo_width, logo_height = logo.size
+        logo_height = int(logo_height * int(logo_height_percent) / 100)
+        logo_width = int(logo_width * logo_height / logo.size[1])
+        doc.add_picture(logo_path, width=Inches(logo_width / 96), height=Inches(logo_height / 96))
+
     doc.add_heading(f'Snapshot Summary Report for {domain}', 0)
 
     doc.add_heading('Introduction', level=1)
@@ -64,11 +76,21 @@ def create_summary_report(snapshots, domain, filename='summary_report.docx'):
 
     doc.save(filename)
 
-def create_detailed_analysis_report(snapshots, domain, filename='detailed_analysis_report.docx'):
+def create_detailed_analysis_report(snapshots, domain, logo_path, logo_height_percent, filename='detailed_analysis_report.docx'):
     data = [(snap, *split_date_components(extract_date_from_link(snap))) for snap in snapshots]
     df = pd.DataFrame(data, columns=['Link', 'Month', 'Day', 'Year', 'Hour', 'Minute', 'Second', 'AM/PM'])
 
     doc = Document()
+    
+    # Add the logo above the title
+    if logo_path:
+        from PIL import Image
+        logo = Image.open(logo_path)
+        logo_width, logo_height = logo.size
+        logo_height = int(logo_height * int(logo_height_percent) / 100)
+        logo_width = int(logo_width * logo_height / logo.size[1])
+        doc.add_picture(logo_path, width=Inches(logo_width / 96), height=Inches(logo_height / 96))
+
     doc.add_heading(f'Detailed Snapshot Analysis for {domain}', 0)
 
     doc.add_heading('Introduction', level=1)
@@ -136,15 +158,44 @@ def create_detailed_analysis_report(snapshots, domain, filename='detailed_analys
 
     doc.save(filename)
 
-if __name__ == '__main__':
-    url = input("Enter the URL: ").strip()
+def browse_file(variable):
+    file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.png *.jpg *.jpeg *.bmp *.gif")])
+    variable.set(file_path)
+
+def generate_reports():
+    url = url_var.get()
     if not url.startswith("http://") and not url.startswith("https://"):
         url = "http://" + url
     domain = url.split('//')[1].split('/')[0]
     snapshots = get_snapshots(url)
+    logo_path = logo_path_var.get()
+    logo_height_percent = logo_height_percent_var.get()
     if snapshots:
-        create_summary_report(snapshots, domain)
-        create_detailed_analysis_report(snapshots, domain)
-        print(f'Reports saved to summary_report.docx and detailed_analysis_report.docx')
+        create_summary_report(snapshots, domain, logo_path, logo_height_percent)
+        create_detailed_analysis_report(snapshots, domain, logo_path, logo_height_percent)
+        messagebox.showinfo("Success", "Reports saved to summary_report.docx and detailed_analysis_report.docx")
     else:
-        print("No snapshots found or there was an error.")
+        messagebox.showerror("Error", "No snapshots found or there was an error.")
+
+if __name__ == '__main__':
+    root = Tk()
+    root.title("Snapshot Analysis Report Generator")
+    root.geometry("400x300")
+
+    url_var = StringVar()
+    logo_path_var = StringVar()
+    logo_height_percent_var = StringVar(value="50")
+
+    Label(root, text="Enter URL:").grid(row=0, column=0, padx=10, pady=10, sticky='w')
+    Entry(root, textvariable=url_var, width=50).grid(row=0, column=1, padx=10, pady=10, sticky='w')
+
+    Label(root, text="Logo File:").grid(row=1, column=0, padx=10, pady=10, sticky='w')
+    Entry(root, textvariable=logo_path_var, width=50).grid(row=1, column=1, padx=10, pady=10, sticky='w')
+    Button(root, text="Browse", command=lambda: browse_file(logo_path_var)).grid(row=1, column=2, padx=10, pady=10, sticky='w')
+
+    Label(root, text="Logo Height (%):").grid(row=2, column=0, padx=10, pady=10, sticky='w')
+    Entry(root, textvariable=logo_height_percent_var, width=10).grid(row=2, column=1, padx=10, pady=10, sticky='w')
+
+    Button(root, text="Generate Reports", command=generate_reports).grid(row=3, columnspan=3, padx=10, pady=20)
+
+    root.mainloop()
