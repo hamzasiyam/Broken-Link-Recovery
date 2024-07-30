@@ -180,7 +180,7 @@ def generate_reports():
 if __name__ == '__main__':
     root = Tk()
     root.title("Snapshot Analysis Report Generator")
-    root.geometry("400x300")
+    root.geometry("600x300")
 
     url_var = StringVar()
     logo_path_var = StringVar()
