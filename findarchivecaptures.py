@@ -24,25 +24,21 @@ def extract_date_from_link(link):
     return date
 
 def split_date_components(date):
-    return date.strftime('%B'), date.strftime('%d'), date.strftime('%Y'), date.strftime('%I'), date.strftime('%M'), date.strftime('%S'), date.strftime('%p')
+    return date.strftime('%B %d, %Y'), date.strftime('%I:%M:%S %p')
 
 def create_summary_report(snapshots, domain, logo_path, logo_height_percent, filename='summary_report.docx'):
-    data = [(snap, *split_date_components(extract_date_from_link(snap))) for snap in snapshots]
-    df = pd.DataFrame(data, columns=['Link', 'Month', 'Day', 'Year', 'Hour', 'Minute', 'Second', 'AM/PM'])
+    data = [(i+1, *split_date_components(extract_date_from_link(snap))) for i, snap in enumerate(snapshots)]
+    df = pd.DataFrame(data, columns=['Capture', 'Date', 'Time'])
 
     summary = {
         'Total Captures': len(snapshots),
         'First Capture': {
-            'Month': df['Month'].iloc[0],
-            'Day': df['Day'].iloc[0],
-            'Year': df['Year'].iloc[0],
-            'Time': f"{df['Hour'].iloc[0]}:{df['Minute'].iloc[0]}:{df['Second'].iloc[0]} {df['AM/PM'].iloc[0]}"
+            'Date': df['Date'].iloc[0],
+            'Time': df['Time'].iloc[0]
         },
         'Last Capture': {
-            'Month': df['Month'].iloc[-1],
-            'Day': df['Day'].iloc[-1],
-            'Year': df['Year'].iloc[-1],
-            'Time': f"{df['Hour'].iloc[-1]}:{df['Minute'].iloc[-1]}:{df['Second'].iloc[-1]} {df['AM/PM'].iloc[-1]}"
+            'Date': df['Date'].iloc[-1],
+            'Time': df['Time'].iloc[-1]
         }
     }
 
@@ -68,17 +64,17 @@ def create_summary_report(snapshots, domain, logo_path, logo_height_percent, fil
     doc.add_heading('Summary of Captures', level=1)
     doc.add_paragraph(f"Total Captures: {summary['Total Captures']}")
     doc.add_heading('First Capture', level=2)
-    doc.add_paragraph(f"Date: {summary['First Capture']['Month']} {summary['First Capture']['Day']}, {summary['First Capture']['Year']}")
+    doc.add_paragraph(f"Date: {summary['First Capture']['Date']}")
     doc.add_paragraph(f"Time: {summary['First Capture']['Time']}")
     doc.add_heading('Last Capture', level=2)
-    doc.add_paragraph(f"Date: {summary['Last Capture']['Month']} {summary['Last Capture']['Day']}, {summary['Last Capture']['Year']}")
+    doc.add_paragraph(f"Date: {summary['Last Capture']['Date']}")
     doc.add_paragraph(f"Time: {summary['Last Capture']['Time']}")
 
     doc.save(filename)
 
-def create_detailed_analysis_report(snapshots, domain, logo_path, logo_height_percent, filename='detailed_analysis_report.docx'):
-    data = [(snap, *split_date_components(extract_date_from_link(snap))) for snap in snapshots]
-    df = pd.DataFrame(data, columns=['Link', 'Month', 'Day', 'Year', 'Hour', 'Minute', 'Second', 'AM/PM'])
+def create_detailed_analysis_report(snapshots, domain, logo_path, logo_height_percent, column_color_hex, filename='detailed_analysis_report.docx'):
+    data = [(i+1, *split_date_components(extract_date_from_link(snap))) for i, snap in enumerate(snapshots)]
+    df = pd.DataFrame(data, columns=['Capture', 'Date', 'Time'])
 
     doc = Document()
     
@@ -100,30 +96,25 @@ def create_detailed_analysis_report(snapshots, domain, logo_path, logo_height_pe
     doc.add_paragraph(f"Total Captures: {len(snapshots)}")
     doc.add_paragraph('The table below lists the snapshots in ascending order, organized by date and time.')
 
-    table = doc.add_table(rows=1, cols=7)
+    table = doc.add_table(rows=1, cols=3)
     hdr_cells = table.rows[0].cells
-    hdr_cells[0].text = 'Month'
-    hdr_cells[1].text = 'Day'
-    hdr_cells[2].text = 'Year'
-    hdr_cells[3].text = 'Hour'
-    hdr_cells[4].text = 'Minute'
-    hdr_cells[5].text = 'Second'
-    hdr_cells[6].text = 'AM/PM'
+    hdr_cells[0].text = 'Capture'
+    hdr_cells[1].text = 'Date'
+    hdr_cells[2].text = 'Time'
 
     for cell in hdr_cells:
         run = cell.paragraphs[0].runs[0]
         run.bold = True
         run.font.size = Pt(12)
+        shading_elm_1 = OxmlElement("w:shd")
+        shading_elm_1.set(qn("w:fill"), column_color_hex)
+        cell._element.get_or_add_tcPr().append(shading_elm_1)
 
     for index, row in df.iterrows():
         row_cells = table.add_row().cells
-        row_cells[0].text = row['Month']
-        row_cells[1].text = row['Day']
-        row_cells[2].text = row['Year']
-        row_cells[3].text = row['Hour']
-        row_cells[4].text = row['Minute']
-        row_cells[5].text = row['Second']
-        row_cells[6].text = row['AM/PM']
+        row_cells[0].text = str(row['Capture'])
+        row_cells[1].text = row['Date']
+        row_cells[2].text = row['Time']
 
     # Add borders to the table
     tbl = table._tbl
@@ -170,9 +161,10 @@ def generate_reports():
     snapshots = get_snapshots(url)
     logo_path = logo_path_var.get()
     logo_height_percent = logo_height_percent_var.get()
+    column_color_hex = column_color_hex_var.get().lstrip('#')
     if snapshots:
         create_summary_report(snapshots, domain, logo_path, logo_height_percent)
-        create_detailed_analysis_report(snapshots, domain, logo_path, logo_height_percent)
+        create_detailed_analysis_report(snapshots, domain, logo_path, logo_height_percent, column_color_hex)
         messagebox.showinfo("Success", "Reports saved to summary_report.docx and detailed_analysis_report.docx")
     else:
         messagebox.showerror("Error", "No snapshots found or there was an error.")
@@ -180,11 +172,12 @@ def generate_reports():
 if __name__ == '__main__':
     root = Tk()
     root.title("Snapshot Analysis Report Generator")
-    root.geometry("600x300")
+    root.geometry("600x350")
 
     url_var = StringVar()
     logo_path_var = StringVar()
     logo_height_percent_var = StringVar(value="50")
+    column_color_hex_var = StringVar(value="FFFFFF")
 
     Label(root, text="Enter URL:").grid(row=0, column=0, padx=10, pady=10, sticky='w')
     Entry(root, textvariable=url_var, width=50).grid(row=0, column=1, padx=10, pady=10, sticky='w')
@@ -196,6 +189,9 @@ if __name__ == '__main__':
     Label(root, text="Logo Height (%):").grid(row=2, column=0, padx=10, pady=10, sticky='w')
     Entry(root, textvariable=logo_height_percent_var, width=10).grid(row=2, column=1, padx=10, pady=10, sticky='w')
 
-    Button(root, text="Generate Reports", command=generate_reports).grid(row=3, columnspan=3, padx=10, pady=20)
+    Label(root, text="Column Shading Color (Hex):").grid(row=3, column=0, padx=10, pady=10, sticky='w')
+    Entry(root, textvariable=column_color_hex_var, width=10).grid(row=3, column=1, padx=10, pady=10, sticky='w')
+
+    Button(root, text="Generate Reports", command=generate_reports).grid(row=4, columnspan=3, padx=10, pady=20)
 
     root.mainloop()
