@@ -29,7 +29,7 @@ This program generates summary and detailed analysis reports for website snapsho
 ### Running the Program
 Run the script to open a GUI for generating reports:
 ```sh
-python script_name.py
+python findarchivecaptures.py
 ```
 
 ### GUI Components
@@ -65,7 +65,7 @@ Generates the summary and detailed analysis reports based on the input URL and l
 - **Detailed Analysis Report:** Includes a table listing all snapshots with date and time details.
 
 ## License
-This project is licensed under the MIT License.
+This project is not licensed yet
 
 ## Acknowledgements
 - Uses the `waybackpack` tool for fetching snapshots.
