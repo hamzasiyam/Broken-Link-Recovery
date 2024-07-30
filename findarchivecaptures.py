@@ -26,7 +26,11 @@ def extract_date_from_link(link):
 def split_date_components(date):
     return date.strftime('%B %d, %Y'), date.strftime('%I:%M:%S %p')
 
-def create_summary_report(snapshots, domain, logo_path, logo_height_percent, filename='summary_report.docx'):
+def set_font_color(run, hex_color):
+    r, g, b = tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+    run.font.color.rgb = RGBColor(r, g, b)
+
+def create_summary_report(snapshots, domain, logo_path, logo_height_percent, title_color_hex, heading_color_hex, filename='summary_report.docx'):
     data = [(i+1, *split_date_components(extract_date_from_link(snap))) for i, snap in enumerate(snapshots)]
     df = pd.DataFrame(data, columns=['Capture', 'Date', 'Time'])
 
@@ -53,26 +57,34 @@ def create_summary_report(snapshots, domain, logo_path, logo_height_percent, fil
         logo_width = int(logo_width * logo_height / logo.size[1])
         doc.add_picture(logo_path, width=Inches(logo_width / 96), height=Inches(logo_height / 96))
 
-    doc.add_heading(f'Snapshot Summary Report for {domain}', 0)
+    title_run = doc.add_heading(f'Snapshot Summary Report for {domain}', 0).runs[0]
+    set_font_color(title_run, title_color_hex)
 
-    doc.add_heading('Introduction', level=1)
+    heading_1_run = doc.add_heading('Introduction', level=1).runs[0]
+    set_font_color(heading_1_run, heading_color_hex)
     doc.add_paragraph('This report provides a summary of the snapshots captured from the specified URL. The snapshots represent historical captures of the website, which are the first step in our process of identifying and fixing broken links. By analyzing these snapshots, we can gain insights into the changes and updates made to the website over time.')
 
-    doc.add_heading('Methodology', level=1)
+    heading_1_run = doc.add_heading('Methodology', level=1).runs[0]
+    set_font_color(heading_1_run, heading_color_hex)
     doc.add_paragraph('The data was collected to provide a timeline of the website\'s state at various points in time. These snapshots help us understand how the website has evolved and where issues such as broken links may have arisen.')
 
-    doc.add_heading('Summary of Captures', level=1)
+    heading_1_run = doc.add_heading('Summary of Captures', level=1).runs[0]
+    set_font_color(heading_1_run, heading_color_hex)
     doc.add_paragraph(f"Total Captures: {summary['Total Captures']}")
-    doc.add_heading('First Capture', level=2)
+    
+    heading_2_run = doc.add_heading('First Capture', level=2).runs[0]
+    set_font_color(heading_2_run, heading_color_hex)
     doc.add_paragraph(f"Date: {summary['First Capture']['Date']}")
     doc.add_paragraph(f"Time: {summary['First Capture']['Time']}")
-    doc.add_heading('Last Capture', level=2)
+    
+    heading_2_run = doc.add_heading('Last Capture', level=2).runs[0]
+    set_font_color(heading_2_run, heading_color_hex)
     doc.add_paragraph(f"Date: {summary['Last Capture']['Date']}")
     doc.add_paragraph(f"Time: {summary['Last Capture']['Time']}")
 
     doc.save(filename)
 
-def create_detailed_analysis_report(snapshots, domain, logo_path, logo_height_percent, column_color_hex, filename='detailed_analysis_report.docx'):
+def create_detailed_analysis_report(snapshots, domain, logo_path, logo_height_percent, title_color_hex, heading_color_hex, column_color_hex, filename='detailed_analysis_report.docx'):
     data = [(i+1, *split_date_components(extract_date_from_link(snap))) for i, snap in enumerate(snapshots)]
     df = pd.DataFrame(data, columns=['Capture', 'Date', 'Time'])
 
@@ -87,12 +99,15 @@ def create_detailed_analysis_report(snapshots, domain, logo_path, logo_height_pe
         logo_width = int(logo_width * logo_height / logo.size[1])
         doc.add_picture(logo_path, width=Inches(logo_width / 96), height=Inches(logo_height / 96))
 
-    doc.add_heading(f'Detailed Snapshot Analysis for {domain}', 0)
+    title_run = doc.add_heading(f'Detailed Snapshot Analysis for {domain}', 0).runs[0]
+    set_font_color(title_run, title_color_hex)
 
-    doc.add_heading('Introduction', level=1)
+    heading_1_run = doc.add_heading('Introduction', level=1).runs[0]
+    set_font_color(heading_1_run, heading_color_hex)
     doc.add_paragraph('This document provides a detailed analysis of the snapshots captured from the specified URL. Each snapshot represents a historical state of the website. This detailed analysis is a crucial step in our process of identifying and fixing broken links across the website by examining each snapshot and checking all the files and links within them.')
 
-    doc.add_heading('Detailed Analysis', level=1)
+    heading_1_run = doc.add_heading('Detailed Analysis', level=1).runs[0]
+    set_font_color(heading_1_run, heading_color_hex)
     doc.add_paragraph(f"Total Captures: {len(snapshots)}")
     doc.add_paragraph('The table below lists the snapshots in ascending order, organized by date and time.')
 
@@ -130,7 +145,8 @@ def create_detailed_analysis_report(snapshots, domain, logo_path, logo_height_pe
             tcBorders.append(border)
         tcPr.append(tcBorders)
 
-    doc.add_heading('Next Steps', level=1)
+    heading_1_run = doc.add_heading('Next Steps', level=1).runs[0]
+    set_font_color(heading_1_run, heading_color_hex)
 
     def add_bold_paragraph(doc, text):
         p = doc.add_paragraph()
@@ -161,10 +177,12 @@ def generate_reports():
     snapshots = get_snapshots(url)
     logo_path = logo_path_var.get()
     logo_height_percent = logo_height_percent_var.get()
+    title_color_hex = title_color_hex_var.get().lstrip('#')
+    heading_color_hex = heading_color_hex_var.get().lstrip('#')
     column_color_hex = column_color_hex_var.get().lstrip('#')
     if snapshots:
-        create_summary_report(snapshots, domain, logo_path, logo_height_percent)
-        create_detailed_analysis_report(snapshots, domain, logo_path, logo_height_percent, column_color_hex)
+        create_summary_report(snapshots, domain, logo_path, logo_height_percent, title_color_hex, heading_color_hex)
+        create_detailed_analysis_report(snapshots, domain, logo_path, logo_height_percent, title_color_hex, heading_color_hex, column_color_hex)
         messagebox.showinfo("Success", "Reports saved to summary_report.docx and detailed_analysis_report.docx")
     else:
         messagebox.showerror("Error", "No snapshots found or there was an error.")
@@ -172,11 +190,13 @@ def generate_reports():
 if __name__ == '__main__':
     root = Tk()
     root.title("Snapshot Analysis Report Generator")
-    root.geometry("600x350")
+    root.geometry("600x450")
 
     url_var = StringVar()
     logo_path_var = StringVar()
     logo_height_percent_var = StringVar(value="50")
+    title_color_hex_var = StringVar(value="000000")
+    heading_color_hex_var = StringVar(value="000000")
     column_color_hex_var = StringVar(value="FFFFFF")
 
     Label(root, text="Enter URL:").grid(row=0, column=0, padx=10, pady=10, sticky='w')
@@ -189,9 +209,15 @@ if __name__ == '__main__':
     Label(root, text="Logo Height (%):").grid(row=2, column=0, padx=10, pady=10, sticky='w')
     Entry(root, textvariable=logo_height_percent_var, width=10).grid(row=2, column=1, padx=10, pady=10, sticky='w')
 
-    Label(root, text="Column Shading Color (Hex):").grid(row=3, column=0, padx=10, pady=10, sticky='w')
-    Entry(root, textvariable=column_color_hex_var, width=10).grid(row=3, column=1, padx=10, pady=10, sticky='w')
+    Label(root, text="Title Font Color (Hex):").grid(row=3, column=0, padx=10, pady=10, sticky='w')
+    Entry(root, textvariable=title_color_hex_var, width=10).grid(row=3, column=1, padx=10, pady=10, sticky='w')
 
-    Button(root, text="Generate Reports", command=generate_reports).grid(row=4, columnspan=3, padx=10, pady=20)
+    Label(root, text="Heading Font Color (Hex):").grid(row=4, column=0, padx=10, pady=10, sticky='w')
+    Entry(root, textvariable=heading_color_hex_var, width=10).grid(row=4, column=1, padx=10, pady=10, sticky='w')
+
+    Label(root, text="Column Shading Color (Hex):").grid(row=5, column=0, padx=10, pady=10, sticky='w')
+    Entry(root, textvariable=column_color_hex_var, width=10).grid(row=5, column=1, padx=10, pady=10, sticky='w')
+
+    Button(root, text="Generate Reports", command=generate_reports).grid(row=6, columnspan=3, padx=10, pady=20)
 
     root.mainloop()
