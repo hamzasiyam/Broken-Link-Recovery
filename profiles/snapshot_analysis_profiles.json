@@ -1,0 +1,26 @@
+{
+    "default": {
+        "url": "",
+        "logo_path": "",
+        "logo_height_percent": "50",
+        "title_color_hex": "000000",
+        "heading_color_hex": "000000",
+        "column_color_hex": "FFFFFF"
+    },
+    "jclibrary": {
+        "url": "",
+        "logo_path": "//jcfplfiles/users/hsiyam/Desktop/1 Projects/reports/[All Logos]/logo.png",
+        "logo_height_percent": "50",
+        "title_color_hex": "161747",
+        "heading_color_hex": "161747",
+        "column_color_hex": "ffd700"
+    },
+    "jclibrary (logo, color, column)": {
+        "url": "",
+        "logo_path": "//jcfplfiles/users/hsiyam/Desktop/1 Projects/reports/[All Logos]/logo.png",
+        "logo_height_percent": "50",
+        "title_color_hex": "161747",
+        "heading_color_hex": "161747",
+        "column_color_hex": "ffd700"
+    }
+}

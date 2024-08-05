@@ -1,4 +1,5 @@
 import os
+import json
 import subprocess
 import pandas as pd
 from datetime import datetime
@@ -6,7 +7,10 @@ from docx import Document
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
 from docx.shared import Pt, Inches, RGBColor
-from tkinter import Tk, filedialog, messagebox, Label, Entry, Button, StringVar
+from tkinter import Tk, filedialog, messagebox, Label, Entry, Button, StringVar, Toplevel, ttk
+
+PROFILE_DIR = "./profiles"
+PROFILE_FILE = os.path.join(PROFILE_DIR, "snapshot_analysis_profiles.json")
 
 def get_snapshots(url):
     result = subprocess.run(['waybackpack', url, '--list'], capture_output=True, text=True)
@@ -170,6 +174,7 @@ def browse_file(variable):
     variable.set(file_path)
 
 def generate_reports():
+    global url_var, logo_path_var, logo_height_percent_var, title_color_hex_var, heading_color_hex_var, column_color_hex_var
     url = url_var.get()
     if not url.startswith("http://") and not url.startswith("https://"):
         url = "http://" + url
@@ -187,10 +192,147 @@ def generate_reports():
     else:
         messagebox.showerror("Error", "No snapshots found or there was an error.")
 
-if __name__ == '__main__':
+def save_profile(name, profile_data):
+    if not os.path.exists(PROFILE_DIR):
+        os.makedirs(PROFILE_DIR)
+
+    profiles = load_profiles()
+    profiles[name] = profile_data
+
+    with open(PROFILE_FILE, "w") as f:
+        json.dump(profiles, f, indent=4)
+
+def load_profiles():
+    if not os.path.exists(PROFILE_FILE):
+        # Create a default profile file if it doesn't exist
+        default_profiles = {
+            "default": {
+                "url": "",
+                "logo_path": "",
+                "logo_height_percent": "50",
+                "title_color_hex": "000000",
+                "heading_color_hex": "000000",
+                "column_color_hex": "FFFFFF"
+            }
+        }
+        os.makedirs(PROFILE_DIR, exist_ok=True)
+        with open(PROFILE_FILE, "w") as f:
+            json.dump(default_profiles, f, indent=4)
+        return default_profiles
+    else:
+        with open(PROFILE_FILE, "r") as f:
+            return json.load(f)
+
+def select_profile(profile_name_var, vars):
+    profiles = load_profiles()
+    profile_name = profile_name_var.get()
+    if profile_name in profiles:
+        profile = profiles[profile_name]
+        vars['url_var'].set(profile["url"])
+        vars['logo_path_var'].set(profile["logo_path"])
+        vars['logo_height_percent_var'].set(profile["logo_height_percent"])
+        vars['title_color_hex_var'].set(profile["title_color_hex"])
+        vars['heading_color_hex_var'].set(profile["heading_color_hex"])
+        vars['column_color_hex_var'].set(profile["column_color_hex"])
+
+def delete_profile(profile_name_var):
+    profiles = load_profiles()
+    profile_name = profile_name_var.get()
+    if profile_name in profiles:
+        del profiles[profile_name]
+        with open(PROFILE_FILE, "w") as f:
+            json.dump(profiles, f, indent=4)
+        return True
+    return False
+
+def main():
+    global url_var, logo_path_var, logo_height_percent_var, title_color_hex_var, heading_color_hex_var, column_color_hex_var
+
+    def create_profile(existing_profile=None):
+        profile_window = Toplevel(root)
+        profile_window.title("Create/Edit Profile")
+        profile_window.geometry("550x450")
+
+        profile_name = StringVar(value=existing_profile if existing_profile else "")
+        profile_url = StringVar()
+        profile_logo_path = StringVar()
+        profile_logo_height_percent = StringVar(value="50")
+        profile_title_color_hex = StringVar(value="000000")
+        profile_heading_color_hex = StringVar(value="000000")
+        profile_column_color_hex = StringVar(value="FFFFFF")
+
+        if existing_profile:
+            profiles = load_profiles()
+            profile = profiles[existing_profile]
+            profile_url.set(profile["url"])
+            profile_logo_path.set(profile["logo_path"])
+            profile_logo_height_percent.set(profile["logo_height_percent"])
+            profile_title_color_hex.set(profile["title_color_hex"])
+            profile_heading_color_hex.set(profile["heading_color_hex"])
+            profile_column_color_hex.set(profile["column_color_hex"])
+
+        Label(profile_window, text="Profile Name").grid(row=0, column=0, pady=10, sticky='w')
+        Entry(profile_window, textvariable=profile_name, width=50).grid(row=0, column=1)
+
+        Label(profile_window, text="URL").grid(row=1, column=0, pady=10, sticky='w')
+        Entry(profile_window, textvariable=profile_url, width=50).grid(row=1, column=1)
+
+        Label(profile_window, text="Logo File").grid(row=2, column=0, pady=10, sticky='w')
+        Entry(profile_window, textvariable=profile_logo_path, width=50).grid(row=2, column=1)
+        Button(profile_window, text="Browse", command=lambda: browse_file(profile_logo_path)).grid(row=2, column=2)
+
+        Label(profile_window, text="Logo Height (%)").grid(row=3, column=0, pady=10, sticky='w')
+        Entry(profile_window, textvariable=profile_logo_height_percent, width=10).grid(row=3, column=1, sticky='w')
+
+        Label(profile_window, text="Title Color (hex)").grid(row=4, column=0, pady=10, sticky='w')
+        Entry(profile_window, textvariable=profile_title_color_hex, width=10).grid(row=4, column=1, sticky='w')
+
+        Label(profile_window, text="Heading Color (hex)").grid(row=5, column=0, pady=10, sticky='w')
+        Entry(profile_window, textvariable=profile_heading_color_hex, width=10).grid(row=5, column=1, sticky='w')
+
+        Label(profile_window, text="Column Color (hex)").grid(row=6, column=0, pady=10, sticky='w')
+        Entry(profile_window, textvariable=profile_column_color_hex, width=10).grid(row=6, column=1, sticky='w')
+
+        def save_new_profile():
+            profile_data = {
+                "url": profile_url.get(),
+                "logo_path": profile_logo_path.get(),
+                "logo_height_percent": profile_logo_height_percent.get(),
+                "title_color_hex": profile_title_color_hex.get(),
+                "heading_color_hex": profile_heading_color_hex.get(),
+                "column_color_hex": profile_column_color_hex.get()
+            }
+            save_profile(profile_name.get(), profile_data)
+            profile_window.destroy()
+            load_profile_names()
+
+        Button(profile_window, text="Save Profile", command=save_new_profile).grid(row=7, columnspan=3, pady=20)
+
+    def load_profile_names():
+        profiles = load_profiles()
+        profile_names = list(profiles.keys())
+        profile_name_combobox['values'] = profile_names
+
+    def select_profile_callback(event):
+        select_profile(profile_name_var, {
+            'url_var': url_var,
+            'logo_path_var': logo_path_var,
+            'logo_height_percent_var': logo_height_percent_var,
+            'title_color_hex_var': title_color_hex_var,
+            'heading_color_hex_var': heading_color_hex_var,
+            'column_color_hex_var': column_color_hex_var
+        })
+
+    def delete_profile_callback():
+        if delete_profile(profile_name_var):
+            load_profile_names()
+            messagebox.showinfo("Success", "Profile deleted successfully.")
+        else:
+            messagebox.showerror("Error", "Profile not found.")
+
     root = Tk()
     root.title("Snapshot Analysis Report Generator")
-    root.geometry("600x450")
+    root.geometry("600x600")
 
     url_var = StringVar()
     logo_path_var = StringVar()
@@ -220,4 +362,19 @@ if __name__ == '__main__':
 
     Button(root, text="Generate Reports", command=generate_reports).grid(row=6, columnspan=3, padx=10, pady=20)
 
+    Label(root, text="Profile Name").grid(row=7, column=0, pady=10, sticky='w')
+    profile_name_var = StringVar()
+    profile_name_combobox = ttk.Combobox(root, textvariable=profile_name_var, state='readonly')
+    profile_name_combobox.grid(row=7, column=1, pady=10, padx=10)
+    profile_name_combobox.bind("<<ComboboxSelected>>", select_profile_callback)
+
+    Button(root, text="Create Profile", command=lambda: create_profile()).grid(row=8, column=0, pady=10)
+    Button(root, text="Edit Profile", command=lambda: create_profile(existing_profile=profile_name_var.get())).grid(row=8, column=1, pady=10)
+    Button(root, text="Delete Profile", command=delete_profile_callback).grid(row=8, column=2, pady=10)
+
+    load_profile_names()
+
     root.mainloop()
+
+if __name__ == "__main__":
+    main()
