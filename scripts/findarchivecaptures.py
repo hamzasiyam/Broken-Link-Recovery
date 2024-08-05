@@ -10,7 +10,20 @@ from docx.shared import Pt, Inches, RGBColor
 from tkinter import Tk, filedialog, messagebox, Label, Entry, Button, StringVar, Toplevel, ttk
 
 PROFILE_DIR = "./profiles"
+REPORTS_DIR = "./reports"
+PROCESSED_DIR = os.path.join(REPORTS_DIR, "processed")
+RAW_FILES_DIR = os.path.join(REPORTS_DIR, "raw_files")
+LOGOS_DIR = os.path.join(REPORTS_DIR, "all_logos")
+SCRIPTS_DIR = "./scripts"
 PROFILE_FILE = os.path.join(PROFILE_DIR, "snapshot_analysis_profiles.json")
+
+# Ensure the necessary directories exist
+os.makedirs(PROFILE_DIR, exist_ok=True)
+os.makedirs(REPORTS_DIR, exist_ok=True)
+os.makedirs(PROCESSED_DIR, exist_ok=True)
+os.makedirs(RAW_FILES_DIR, exist_ok=True)
+os.makedirs(LOGOS_DIR, exist_ok=True)
+os.makedirs(SCRIPTS_DIR, exist_ok=True)
 
 def get_snapshots(url):
     result = subprocess.run(['waybackpack', url, '--list'], capture_output=True, text=True)
@@ -34,7 +47,8 @@ def set_font_color(run, hex_color):
     r, g, b = tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
     run.font.color.rgb = RGBColor(r, g, b)
 
-def create_summary_report(snapshots, domain, logo_path, logo_height_percent, title_color_hex, heading_color_hex, filename='summary_report.docx'):
+def create_summary_report(snapshots, domain, logo_path, logo_height_percent, title_color_hex, heading_color_hex):
+    filename = os.path.join(PROCESSED_DIR, f'{domain}_summary_report.docx')
     data = [(i+1, *split_date_components(extract_date_from_link(snap))) for i, snap in enumerate(snapshots)]
     df = pd.DataFrame(data, columns=['Capture', 'Date', 'Time'])
 
@@ -88,7 +102,8 @@ def create_summary_report(snapshots, domain, logo_path, logo_height_percent, tit
 
     doc.save(filename)
 
-def create_detailed_analysis_report(snapshots, domain, logo_path, logo_height_percent, title_color_hex, heading_color_hex, column_color_hex, filename='detailed_analysis_report.docx'):
+def create_detailed_analysis_report(snapshots, domain, logo_path, logo_height_percent, title_color_hex, heading_color_hex, column_color_hex):
+    filename = os.path.join(PROCESSED_DIR, f'{domain}_detailed_analysis_report.docx')
     data = [(i+1, *split_date_components(extract_date_from_link(snap))) for i, snap in enumerate(snapshots)]
     df = pd.DataFrame(data, columns=['Capture', 'Date', 'Time'])
 
@@ -170,7 +185,7 @@ def create_detailed_analysis_report(snapshots, domain, logo_path, logo_height_pe
     doc.save(filename)
 
 def browse_file(variable):
-    file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.png *.jpg *.jpeg *.bmp *.gif")])
+    file_path = filedialog.askopenfilename(initialdir=LOGOS_DIR, filetypes=[("Image files", "*.png *.jpg *.jpeg *.bmp *.gif")])
     variable.set(file_path)
 
 def generate_reports():
@@ -188,14 +203,11 @@ def generate_reports():
     if snapshots:
         create_summary_report(snapshots, domain, logo_path, logo_height_percent, title_color_hex, heading_color_hex)
         create_detailed_analysis_report(snapshots, domain, logo_path, logo_height_percent, title_color_hex, heading_color_hex, column_color_hex)
-        messagebox.showinfo("Success", "Reports saved to summary_report.docx and detailed_analysis_report.docx")
+        messagebox.showinfo("Success", f"Reports saved to {PROCESSED_DIR}")
     else:
         messagebox.showerror("Error", "No snapshots found or there was an error.")
 
 def save_profile(name, profile_data):
-    if not os.path.exists(PROFILE_DIR):
-        os.makedirs(PROFILE_DIR)
-
     profiles = load_profiles()
     profiles[name] = profile_data
 
@@ -215,7 +227,6 @@ def load_profiles():
                 "column_color_hex": "FFFFFF"
             }
         }
-        os.makedirs(PROFILE_DIR, exist_ok=True)
         with open(PROFILE_FILE, "w") as f:
             json.dump(default_profiles, f, indent=4)
         return default_profiles
