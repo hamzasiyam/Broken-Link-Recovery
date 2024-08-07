@@ -28,11 +28,18 @@ def format_date_columns(date):
         'Hour, Minute, Second AM/PM': date.strftime('%I:%M:%S %p')
     }
 
+def convert_to_http(link):
+    return link.replace('https://', 'http://')
+
 def save_to_excel(snapshots, filename):
     data = [(i + 1, snap, extract_date_from_link(snap)) for i, snap in enumerate(snapshots)]
     df = pd.DataFrame(data, columns=['Capture', 'Capture Link', 'Date'])
     formatted_dates = df['Date'].apply(format_date_columns).apply(pd.Series)
     df_with_dates = pd.concat([df[['Capture', 'Capture Link']], formatted_dates], axis=1)
+    
+    df_http = df.copy()
+    df_http['Capture Link'] = df_http['Capture Link'].apply(convert_to_http)
+    df_with_dates_http = pd.concat([df_http[['Capture', 'Capture Link']], formatted_dates], axis=1)
     
     # Capture the date columns separately for summary
     first_capture_date = df['Date'].min()
@@ -47,23 +54,28 @@ def save_to_excel(snapshots, filename):
     
     with pd.ExcelWriter(filename, engine='openpyxl') as writer:
         df_with_dates.to_excel(writer, sheet_name='Snapshots', index=False)
+        df_with_dates_http.to_excel(writer, sheet_name='Snapshots_HTTP', index=False)
         summary_df.to_excel(writer, sheet_name='Summary', index=False)
     
     wb = load_workbook(filename)
     ws_snapshots = wb['Snapshots']
-    for col in ws_snapshots.columns:
-        max_length = 0
-        col_letter = get_column_letter(col[0].column)
-        for cell in col:
-            try:
-                if len(str(cell.value)) > max_length:
-                    max_length = len(cell.value)
-            except:
-                pass
-        adjusted_width = (max_length + 2)
-        ws_snapshots.column_dimensions[col_letter].width = adjusted_width
-        for cell in col:
-            cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+    ws_snapshots_http = wb['Snapshots_HTTP']
+    
+    for ws in [ws_snapshots, ws_snapshots_http]:
+        for col in ws.columns:
+            max_length = 0
+            col_letter = get_column_letter(col[0].column)
+            for cell in col:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(cell.value)
+                except:
+                    pass
+            adjusted_width = (max_length + 2)
+            ws.column_dimensions[col_letter].width = adjusted_width
+            for cell in col:
+                cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+    
     ws_summary = wb['Summary']
     for col in ws_summary.columns:
         max_length = 0
@@ -76,14 +88,22 @@ def save_to_excel(snapshots, filename):
                 pass
         adjusted_width = (max_length + 2)
         ws_summary.column_dimensions[col_letter].width = adjusted_width
+
     for row in ws_snapshots.iter_rows():
         for cell in row:
             cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
         ws_snapshots.row_dimensions[row[0].row].height = None
+
+    for row in ws_snapshots_http.iter_rows():
+        for cell in row:
+            cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+        ws_snapshots_http.row_dimensions[row[0].row].height = None
+    
     for row in ws_summary.iter_rows():
         for cell in row:
             cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
         ws_summary.row_dimensions[row[0].row].height = None
+    
     wb.save(filename)
 
 def process_snapshots():
