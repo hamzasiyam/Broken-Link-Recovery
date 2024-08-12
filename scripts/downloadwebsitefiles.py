@@ -49,19 +49,21 @@ def check_wget():
         print(f"Error checking wget installation: {e}")
         return False
 
-def download_with_wget(url, output_dir):
+def download_with_wget(url, target_dir, capture, date_str, time_str):
     global wget_process
-    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-    parsed_url = urllib.parse.urlparse(url)
-    domain = parsed_url.netloc
-    folder_name = f"{sanitize_filename(domain)}_{timestamp}"
-    target_dir = os.path.join(output_dir, folder_name)
-    os.makedirs(target_dir, exist_ok=True)
-    print(f"Created directory: {target_dir}")
+    # Replace colons with underscores in the time string to make it file system safe
+    time_str_safe = time_str.replace(":", "_")
+    
+    # Construct the folder name using Capture, Date, and Time
+    folder_name = f"Capture_{capture}_Date_{date_str}_Time_{time_str_safe}"
+    folder_name = sanitize_filename(folder_name)
+    final_target_dir = os.path.join(target_dir, folder_name)
+    os.makedirs(final_target_dir, exist_ok=True)
+    print(f"Created directory: {final_target_dir}")
     
     try:
         command = [
-            'wget', '--mirror', '--convert-links', '--adjust-extension', '--page-requisites', '--no-parent', url, '-P', target_dir
+            'wget', '--mirror', '--convert-links', '--adjust-extension', '--page-requisites', '--no-parent', url, '-P', final_target_dir
         ]
         print(f"Running command: {' '.join(command)}")
         wget_process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
@@ -71,7 +73,7 @@ def download_with_wget(url, output_dir):
         if wget_process.returncode != 0:
             print(f"Error downloading {url}: {wget_process.stderr.read()}")
         else:
-            print(f"Successfully downloaded: {url} to {target_dir}")
+            print(f"Successfully downloaded: {url} to {final_target_dir}")
         return wget_process.returncode == 0
     except Exception as e:
         print(f"Error downloading {url}: {e}")
@@ -80,18 +82,28 @@ def download_with_wget(url, output_dir):
 def process_spreadsheet(file_path, sheet_name, output_dir, delay):
     try:
         df = pd.read_excel(file_path, sheet_name=sheet_name)
-        if 'Capture Link' not in df.columns:
-            messagebox.showerror("Error", "'Capture Link' column not found in the spreadsheet.")
+        required_columns = ['Capture', 'Capture Link', 'Month Day, Year', 'Hour, Minute, Second AM/PM']
+        if not all(col in df.columns for col in required_columns):
+            messagebox.showerror("Error", "The spreadsheet is missing required columns.")
             return
-        os.makedirs(output_dir, exist_ok=True)
+        
+        # Extract the domain from the filename
+        domain = os.path.basename(file_path).split('_')[0]
+        specific_output_dir = os.path.join(output_dir, f"{domain}_snapshots")
+        os.makedirs(specific_output_dir, exist_ok=True)
+        
         for i, row in df.iterrows():
+            capture = row['Capture']
             url = row['Capture Link']
+            date_str = row['Month Day, Year']
+            time_str = row['Hour, Minute, Second AM/PM']
             print(f"Downloading URL: {url}")
-            success = download_with_wget(url, output_dir)
+            success = download_with_wget(url, specific_output_dir, capture, date_str, time_str)
             if not success:
                 print(f"Failed to download: {url}")
             time.sleep(delay)  # Wait for the specified delay before downloading the next archive
-        messagebox.showinfo("Success", "Downloaded contents successfully.")
+        
+        messagebox.showinfo("Success", f"Downloaded contents successfully to {specific_output_dir}.")
     except Exception as e:
         print(f"Failed to process the spreadsheet: {e}")
         messagebox.showerror("Error", f"Failed to process the spreadsheet: {e}")
