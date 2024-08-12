@@ -127,13 +127,19 @@ app.title("Wayback Machine Snapshot Exporter")
 frame = tk.Frame(app, padx=10, pady=10)
 frame.pack(padx=10, pady=10)
 
+# Summary of what the program does
+summary_label = tk.Label(frame, text="This tool retrieves historical snapshots of a website from the Wayback Machine "
+                                      "and exports them into an Excel file with detailed date formatting and summary. Includes a sheet for HTTP and HTTPS links.",
+                         wraplength=400, justify="left", font=("Arial", 10, "italic"))
+summary_label.grid(row=0, columnspan=2, pady=10)
+
 label_url = tk.Label(frame, text="Enter URL:")
-label_url.grid(row=0, column=0, pady=5)
+label_url.grid(row=1, column=0, pady=5)
 
 entry_url = tk.Entry(frame, width=50)
-entry_url.grid(row=0, column=1, pady=5)
+entry_url.grid(row=1, column=1, pady=5)
 
 button_process = tk.Button(frame, text="Process Snapshots", command=process_snapshots)
-button_process.grid(row=1, columnspan=2, pady=10)
+button_process.grid(row=2, columnspan=2, pady=10)
 
 app.mainloop()

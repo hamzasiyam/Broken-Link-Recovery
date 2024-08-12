@@ -352,36 +352,43 @@ def main():
     heading_color_hex_var = StringVar(value="000000")
     column_color_hex_var = StringVar(value="FFFFFF")
 
-    Label(root, text="Enter URL:").grid(row=0, column=0, padx=10, pady=10, sticky='w')
-    Entry(root, textvariable=url_var, width=50).grid(row=0, column=1, padx=10, pady=10, sticky='w')
+    # Summary of what the program does
+    summary_label = Label(root, text="This tool generates snapshot analysis reports for websites. "
+                                     "It retrieves historical snapshots from a URL and creates detailed "
+                                     "reports that help identify and fix broken links.",
+                          wraplength=500, justify="left", font=("Arial", 10, "italic"))
+    summary_label.grid(row=0, columnspan=3, padx=10, pady=10)
 
-    Label(root, text="Logo File:").grid(row=1, column=0, padx=10, pady=10, sticky='w')
-    Entry(root, textvariable=logo_path_var, width=50).grid(row=1, column=1, padx=10, pady=10, sticky='w')
-    Button(root, text="Browse", command=lambda: browse_file(logo_path_var)).grid(row=1, column=2, padx=10, pady=10, sticky='w')
+    Label(root, text="Enter URL:").grid(row=1, column=0, padx=10, pady=10, sticky='w')
+    Entry(root, textvariable=url_var, width=50).grid(row=1, column=1, padx=10, pady=10, sticky='w')
 
-    Label(root, text="Logo Height (%):").grid(row=2, column=0, padx=10, pady=10, sticky='w')
-    Entry(root, textvariable=logo_height_percent_var, width=10).grid(row=2, column=1, padx=10, pady=10, sticky='w')
+    Label(root, text="Logo File:").grid(row=2, column=0, padx=10, pady=10, sticky='w')
+    Entry(root, textvariable=logo_path_var, width=50).grid(row=2, column=1, padx=10, pady=10, sticky='w')
+    Button(root, text="Browse", command=lambda: browse_file(logo_path_var)).grid(row=2, column=2, padx=10, pady=10, sticky='w')
 
-    Label(root, text="Title Font Color (Hex):").grid(row=3, column=0, padx=10, pady=10, sticky='w')
-    Entry(root, textvariable=title_color_hex_var, width=10).grid(row=3, column=1, padx=10, pady=10, sticky='w')
+    Label(root, text="Logo Height (%):").grid(row=3, column=0, padx=10, pady=10, sticky='w')
+    Entry(root, textvariable=logo_height_percent_var, width=10).grid(row=3, column=1, padx=10, pady=10, sticky='w')
 
-    Label(root, text="Heading Font Color (Hex):").grid(row=4, column=0, padx=10, pady=10, sticky='w')
-    Entry(root, textvariable=heading_color_hex_var, width=10).grid(row=4, column=1, padx=10, pady=10, sticky='w')
+    Label(root, text="Title Font Color (Hex):").grid(row=4, column=0, padx=10, pady=10, sticky='w')
+    Entry(root, textvariable=title_color_hex_var, width=10).grid(row=4, column=1, padx=10, pady=10, sticky='w')
 
-    Label(root, text="Column Shading Color (Hex):").grid(row=5, column=0, padx=10, pady=10, sticky='w')
-    Entry(root, textvariable=column_color_hex_var, width=10).grid(row=5, column=1, padx=10, pady=10, sticky='w')
+    Label(root, text="Heading Font Color (Hex):").grid(row=5, column=0, padx=10, pady=10, sticky='w')
+    Entry(root, textvariable=heading_color_hex_var, width=10).grid(row=5, column=1, padx=10, pady=10, sticky='w')
 
-    Button(root, text="Generate Reports", command=generate_reports).grid(row=6, columnspan=3, padx=10, pady=20)
+    Label(root, text="Column Shading Color (Hex):").grid(row=6, column=0, padx=10, pady=10, sticky='w')
+    Entry(root, textvariable=column_color_hex_var, width=10).grid(row=6, column=1, padx=10, pady=10, sticky='w')
 
-    Label(root, text="Profile Name").grid(row=7, column=0, pady=10, sticky='w')
+    Button(root, text="Generate Reports", command=generate_reports).grid(row=7, columnspan=3, padx=10, pady=20)
+
+    Label(root, text="Profile Name").grid(row=8, column=0, pady=10, sticky='w')
     profile_name_var = StringVar()
     profile_name_combobox = ttk.Combobox(root, textvariable=profile_name_var, state='readonly')
-    profile_name_combobox.grid(row=7, column=1, pady=10, padx=10)
+    profile_name_combobox.grid(row=8, column=1, pady=10, padx=10)
     profile_name_combobox.bind("<<ComboboxSelected>>", select_profile_callback)
 
-    Button(root, text="Create Profile", command=lambda: create_profile()).grid(row=8, column=0, pady=10)
-    Button(root, text="Edit Profile", command=lambda: create_profile(existing_profile=profile_name_var.get())).grid(row=8, column=1, pady=10)
-    Button(root, text="Delete Profile", command=delete_profile_callback).grid(row=8, column=2, pady=10)
+    Button(root, text="Create Profile", command=lambda: create_profile()).grid(row=9, column=0, pady=10)
+    Button(root, text="Edit Profile", command=lambda: create_profile(existing_profile=profile_name_var.get())).grid(row=9, column=1, pady=10)
+    Button(root, text="Delete Profile", command=delete_profile_callback).grid(row=9, column=2, pady=10)
 
     load_profile_names()
 
