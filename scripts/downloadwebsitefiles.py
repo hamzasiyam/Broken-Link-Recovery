@@ -312,52 +312,58 @@ app.title("Web Archive Downloader with Proxy")
 frame = tk.Frame(app, padx=10, pady=10)
 frame.pack(padx=10, pady=10)
 
-tk.Label(frame, text="Proxy Type:").grid(row=0, column=0, pady=5, sticky=tk.W)
+# Summary of what the program does
+summary_label = tk.Label(frame, text="This program downloads web content based on URLs from an Excel spreadsheet, "
+                                      "supports proxy settings, and saves the downloaded content into organized directories.",
+                         wraplength=400, justify="left", font=("Arial", 10, "italic"))
+summary_label.grid(row=0, columnspan=3, pady=10)
+
+tk.Label(frame, text="Proxy Type:").grid(row=1, column=0, pady=5, sticky=tk.W)
 proxy_type_var = tk.StringVar(value="HTTP")
 proxy_type_menu = ttk.Combobox(frame, textvariable=proxy_type_var, values=["HTTP", "SOCKS5"], state="readonly")
-proxy_type_menu.grid(row=0, column=1, pady=5)
+proxy_type_menu.grid(row=1, column=1, pady=5)
 
-tk.Label(frame, text="Domain Name:").grid(row=1, column=0, pady=5, sticky=tk.W)
+tk.Label(frame, text="Domain Name:").grid(row=2, column=0, pady=5, sticky=tk.W)
 entry_domain_name = tk.Entry(frame, width=50)
-entry_domain_name.grid(row=1, column=1, pady=5)
+entry_domain_name.grid(row=2, column=1, pady=5)
 
-tk.Label(frame, text="Proxy Port:").grid(row=2, column=0, pady=5, sticky=tk.W)
+tk.Label(frame, text="Proxy Port:").grid(row=3, column=0, pady=5, sticky=tk.W)
 entry_proxy_port = tk.Entry(frame, width=50)
-entry_proxy_port.grid(row=2, column=1, pady=5)
+entry_proxy_port.grid(row=3, column=1, pady=5)
 
-tk.Label(frame, text="Proxy Username:").grid(row=3, column=0, pady=5, sticky=tk.W)
+tk.Label(frame, text="Proxy Username:").grid(row=4, column=0, pady=5, sticky=tk.W)
 entry_proxy_username = tk.Entry(frame, width=50)
-entry_proxy_username.grid(row=3, column=1, pady=5)
+entry_proxy_username.grid(row=4, column=1, pady=5)
 
-tk.Label(frame, text="Proxy Password:").grid(row=4, column=0, pady=5, sticky=tk.W)
+tk.Label(frame, text="Proxy Password:").grid(row=5, column=0, pady=5, sticky=tk.W)
 entry_proxy_password = tk.Entry(frame, width=50, show="*")
-entry_proxy_password.grid(row=4, column=1, pady=5)
+entry_proxy_password.grid(row=5, column=1, pady=5)
 
 disable_proxy_var = tk.IntVar()
 disable_proxy_checkbutton = tk.Checkbutton(frame, text="Disable Proxy", variable=disable_proxy_var)
-disable_proxy_checkbutton.grid(row=5, columnspan=2, pady=5)
+disable_proxy_checkbutton.grid(row=6, columnspan=2, pady=5)
 
-tk.Label(frame, text="Time between downloads (seconds):").grid(row=6, column=0, pady=5, sticky=tk.W)
+tk.Label(frame, text="Time between downloads (seconds):").grid(row=7, column=0, pady=5, sticky=tk.W)
 download_delay_var = tk.StringVar(value="5")
-tk.Entry(frame, textvariable=download_delay_var, width=10).grid(row=6, column=1, pady=5, sticky=tk.W)
+tk.Entry(frame, textvariable=download_delay_var, width=10).grid(row=7, column=1, pady=5, sticky=tk.W)
 
 button_start = tk.Button(frame, text="Start", command=start_program)
-button_start.grid(row=7, columnspan=2, pady=10)
+button_start.grid(row=8, columnspan=2, pady=10)
 
-tk.Label(frame, text="Profile Name").grid(row=8, column=0, pady=10, sticky=tk.W)
+tk.Label(frame, text="Profile Name").grid(row=9, column=0, pady=10, sticky=tk.W)
 profile_name_var = tk.StringVar()
 profile_name_combobox = ttk.Combobox(frame, textvariable=profile_name_var, state='readonly')
-profile_name_combobox.grid(row=8, column=1, pady=10, padx=10)
+profile_name_combobox.grid(row=9, column=1, pady=10, padx=10)
 profile_name_combobox.bind("<<ComboboxSelected>>", select_profile_callback)
 
 button_create_profile = tk.Button(frame, text="Create Profile", command=create_profile_window)
-button_create_profile.grid(row=8, column=2, pady=10)
+button_create_profile.grid(row=9, column=2, pady=10)
 
 button_edit_profile = tk.Button(frame, text="Edit Profile", command=edit_profile_window)
-button_edit_profile.grid(row=9, column=1, pady=10)
+button_edit_profile.grid(row=10, column=1, pady=10)
 
 button_delete_profile = tk.Button(frame, text="Delete Profile", command=delete_selected_profile)
-button_delete_profile.grid(row=9, column=2, pady=10)
+button_delete_profile.grid(row=10, column=2, pady=10)
 
 load_profile_names()
 
