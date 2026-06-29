@@ -1,2 +1,1 @@
-"""Modular components for the Neverbroken web archive toolkit."""
-
+"""Modular components for the Broken Link Recovery Tool application."""

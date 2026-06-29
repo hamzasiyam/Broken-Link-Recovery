@@ -1,6 +1,15 @@
+"""Centralized filesystem paths for Broken Link Recovery Tool.
+
+Every module imports paths from here instead of rebuilding strings manually.
+That keeps generated reports, profiles, bundled tools, and download folders
+consistent across GUI and command-line workflows.
+"""
+
 from pathlib import Path
 
 
+# Resolve the repository root from this file's location so the app works even
+# when launched from a different current working directory.
 BASE_DIR = Path(__file__).resolve().parent.parent
 PROFILE_DIR = BASE_DIR / "profiles"
 REPORTS_DIR = BASE_DIR / "reports"
@@ -16,7 +25,16 @@ WGET_EXE = BASE_DIR / "wget.exe"
 
 
 def ensure_project_directories() -> None:
-    """Create runtime directories used by the toolkit."""
+    """Create runtime directories used by the application.
+
+    Args:
+        None.
+
+    Returns:
+        None. The function creates folders on disk as needed and does not
+        return a value.
+    """
+    # Iterate over every directory the program may write to during normal use.
     for directory in (
         PROFILE_DIR,
         REPORTS_DIR,
@@ -25,5 +43,6 @@ def ensure_project_directories() -> None:
         LOGOS_DIR,
         SCRIPTS_DIR,
     ):
+        # ``parents=True`` creates missing parent folders; ``exist_ok=True``
+        # keeps startup idempotent when folders already exist.
         directory.mkdir(parents=True, exist_ok=True)
-
