@@ -102,6 +102,50 @@ Available workflows:
 
 Legacy wrappers are still available in `scripts/`, but new usage should go through `main.py`.
 
+## Program Flow
+
+```mermaid
+flowchart TD
+    A([Start]) --> B[Run python main.py]
+    B --> C[Create required project directories]
+    C --> D{User action}
+
+    D -->|Open launcher| E[Show workflow selector]
+    D -->|Use --list-tools| F[Print available workflow IDs]
+    D -->|Use --tool| G[Launch selected workflow directly]
+
+    E --> H{Choose workflow}
+    G --> H
+
+    H -->|snapshot-excel| I[Enter website URL]
+    I --> J[Fetch Wayback snapshots with waybackpack]
+    J --> K[Create formatted Excel workbook]
+    K --> L[Save workbook to reports/processed]
+
+    H -->|snapshot-reports| M[Enter URL and report settings]
+    M --> N[Load or save optional report profile]
+    N --> O[Fetch Wayback snapshots]
+    O --> P[Generate summary and detailed Word reports]
+    P --> Q[Save reports to reports/processed]
+
+    H -->|archive-downloader| R[Configure proxy or disable proxy]
+    R --> S[Select snapshot workbook and sheet]
+    S --> T[Validate required spreadsheet columns]
+    T --> U[Download each snapshot with wget]
+    U --> V[Save archived files into organized folders]
+
+    H -->|wget-range| W[Select Excel workbook and row range]
+    W --> X[Read capture links from selected rows]
+    X --> Y[Run wget for each link]
+    Y --> Z[Save wget log workbooks]
+
+    F --> AA([End])
+    L --> AA
+    Q --> AA
+    V --> AA
+    Z --> AA
+```
+
 ## Project Structure
 
 ```text
@@ -145,17 +189,11 @@ After installing dependencies, verify imports:
 python -B -c "import modules.gui_snapshot_exporter, modules.gui_report_generator, modules.gui_archive_downloader, modules.gui_wget_range; print('imports ok')"
 ```
 
-## Contributing
+## Statement of AI Use
 
-Contributions are welcome. To contribute:
+I use generative AI to accelerate my coding, but strictly maintain a "human in the loop" to ensure accountability and accuracy. Because AI is not a substitute for foundational programming knowledge and can produce confident errors (hallucinations), I actively apply my expertise to debug and refine all automated suggestions.
 
-1. Create a new branch for your change.
-2. Keep business logic in focused modules under `modules/`.
-3. Keep Tkinter UI code in the relevant `modules/gui_*.py` file.
-4. Preserve `main.py` as the single entry point.
-5. Run the smoke checks in the Tests section.
-6. Update this README when behavior, dependencies, or workflows change.
-7. Open a pull request with a clear summary of the change and any verification performed.
+I am also highly vigilant against AI bias, recognizing that machine learning models can easily absorb and amplify historical inequalities. To build fair applications, I critically evaluate my algorithms and avoid flawed proxies—*using an easily measurable but misleading metric to represent a complex reality, much like using a person's zip code to judge their financial reliability*. By recognizing these limitations, I ensure incomplete data does not unfairly penalize vulnerable groups. Ultimately, the responsibility for the code rests entirely with me.
 
 ## License
 
@@ -166,3 +204,7 @@ This project is licensed under the MIT License.
 "This README was structured based on the principles outlined in How to Write a Good README File for Your GitHub Project (https://www.freecodecamp.org/news/how-to-write-a-good-readme-file/) by freeCodeCamp."
 
 "The code comments were written using the methodology described in AI Programming with Python - Module Name: Commenting in Python (https://www.udacity.com/course/ai-programming-python-nanodegree--nd089) by Udacity."
+
+"The Statement of AI Use was informed by the University of Maryland Robert H. Smith School of Business resource Free Online Certificate: Artificial Intelligence and Career Empowerment (https://www.rhsmith.umd.edu/programs/executive-education/learning-opportunities-individuals/free-online-certificate-artificial-intelligence-and-career-empowerment)."
+
+**Best Practices Citation:** [Indentations with Python](https://learn.udacity.com/nd089?version=13.0.8&partKey=cd13568&lessonKey=58044931-0630-4b80-9feb-3586c32e53d7&conceptKey=5386d06d-51e7-4dfa-a407-bbdb7bb42a45)
